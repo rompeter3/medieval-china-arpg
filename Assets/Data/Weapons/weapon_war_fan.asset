@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d14ff0bfec787476543e34a7ce257727, type: 3}
+  m_Name: weapon_war_fan
+  m_EditorClassIdentifier: MedievalChinaARPG::MedievalChinaARPG.Items.WeaponDefinition
+  itemId: weapon_war_fan
+  displayName: War Fan
+  description: War Fan
+  icon: {fileID: 0}
+  itemType: 0
+  maxStack: 1
+  sellValue: 25
+  category: 10
+  isPlayable: 0
+  baseDamage: 15
+  attackSpeed: 1.35
+  range: 1.5
+  staminaCost: 8
+  upgradeTier: 0
+  maxUpgradeTier: 5
+  damagePerTier: 4
+  upgradeMaterial: {fileID: 0}
+  upgradeMaterialCost: 3
+  lightCombo: {fileID: 0}
+  heavyAttack: {fileID: 0}
+  weaponSkill: {fileID: 0}
+  stubNote: Named stub with stats; equip locked until moveset authored.

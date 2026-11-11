@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90235a16d18d71a434f19f7ad73062f1, type: 3}
+  m_Name: skill_staff3_heavy
+  m_EditorClassIdentifier: MedievalChinaARPG::MedievalChinaARPG.Combat.SkillDefinition
+  skillId: skill_staff3_heavy
+  displayName: staff3 heavy
+  kind: 1
+  damageMultiplier: 1.65
+  duration: 0.55
+  windup: 0.1
+  recovery: 0.12
+  hitRadius: 1.4
+  forwardOffset: 1.0
+  knockback: 2.5
+  staminaCost: 12
+  cooldown: 0
+  comboIndex: 0
+  isProjectile: 0
+  projectileSpeed: 22
+  animationTrigger: Attack
