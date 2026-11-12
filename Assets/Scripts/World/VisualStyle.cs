@@ -8,15 +8,24 @@ namespace MedievalChinaARPG.World
     /// </summary>
     public static class VisualStyle
     {
+        static Material MakeUrpLit(Color color)
+        {
+            var lit = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Universal Render Pipeline/Simple Lit") ?? Shader.Find("Standard");
+            var fallback = new Material(lit);
+            if (fallback.HasProperty("_BaseColor"))
+                fallback.SetColor("_BaseColor", color);
+            else
+                fallback.color = color;
+            return fallback;
+        }
+
+        static bool Usable(Shader shader) => shader != null && shader.isSupported;
+
         public static Material MakeLit(Color color, Color? shade = null, float rim = 0.85f, bool leaf = false)
         {
             var shader = Shader.Find("MedievalChinaARPG/StylizedRim");
-            if (shader == null)
-            {
-                var fallback = new Material(Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard"));
-                fallback.color = color;
-                return fallback;
-            }
+            if (!Usable(shader))
+                return MakeUrpLit(color);
 
             var mat = new Material(shader);
             mat.SetColor("_BaseColor", color);
@@ -33,7 +42,7 @@ namespace MedievalChinaARPG.World
         public static Material MakeFoliage(Color baseCol, Color tipCol)
         {
             var shader = Shader.Find("MedievalChinaARPG/StylizedFoliage");
-            if (shader == null) return MakeLit(baseCol, leaf: true);
+            if (!Usable(shader)) return MakeLit(baseCol, leaf: true);
             var mat = new Material(shader);
             mat.SetColor("_BaseColor", baseCol);
             mat.SetColor("_TipColor", tipCol);
@@ -46,7 +55,7 @@ namespace MedievalChinaARPG.World
         public static Material MakeEmissive(Color color, Color emission)
         {
             var shader = Shader.Find("MedievalChinaARPG/StylizedEmissive");
-            if (shader == null) return MakeLit(color, rim: 1.2f);
+            if (!Usable(shader)) return MakeLit(color, rim: 1.2f);
             var mat = new Material(shader);
             mat.SetColor("_BaseColor", color);
             mat.SetColor("_Emission", emission);
@@ -57,7 +66,7 @@ namespace MedievalChinaARPG.World
         public static Material MakeWater()
         {
             var shader = Shader.Find("MedievalChinaARPG/StylizedWater");
-            if (shader == null) return MakeLit(new Color(0.2f, 0.45f, 0.5f));
+            if (!Usable(shader)) return MakeLit(new Color(0.2f, 0.45f, 0.5f));
             return new Material(shader);
         }
 
@@ -71,7 +80,7 @@ namespace MedievalChinaARPG.World
         {
             RenderSettings.fog = true;
             RenderSettings.fogMode = FogMode.ExponentialSquared;
-            RenderSettings.fogDensity = dusk ? 0.018f : 0.012f;
+            RenderSettings.fogDensity = dusk ? 0.008f : 0.005f;
             RenderSettings.fogColor = dusk
                 ? new Color(0.55f, 0.35f, 0.38f)
                 : new Color(0.62f, 0.72f, 0.78f);

@@ -22,7 +22,6 @@ Shader "MedievalChinaARPG/StylizedFoliage"
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
             #pragma multi_compile_fog
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
@@ -41,7 +40,6 @@ Shader "MedievalChinaARPG/StylizedFoliage"
             {
                 float4 positionOS : POSITION;
                 float3 normalOS : NORMAL;
-                float2 uv : TEXCOORD0;
             };
 
             struct Varyings
@@ -78,12 +76,12 @@ Shader "MedievalChinaARPG/StylizedFoliage"
             {
                 float3 n = normalize(input.normalWS);
                 float3 v = GetWorldSpaceNormalizeViewDir(input.positionWS);
-                Light mainLight = GetMainLight(TransformWorldToShadowCoord(input.positionWS));
+                Light mainLight = GetMainLight();
 
                 float wrap = saturate(dot(n, mainLight.direction) * 0.5 + 0.5);
                 float bands = floor(wrap * 3.0) / 3.0;
                 float3 albedo = lerp(_BaseColor.rgb, _TipColor.rgb, input.height);
-                float3 lit = albedo * mainLight.color * lerp(0.35, 1.0, bands * mainLight.shadowAttenuation);
+                float3 lit = albedo * mainLight.color * lerp(0.35, 1.0, bands);
 
                 float back = saturate(dot(-n, mainLight.direction));
                 lit += albedo * mainLight.color * back * _Translucency;
@@ -97,5 +95,5 @@ Shader "MedievalChinaARPG/StylizedFoliage"
             ENDHLSL
         }
     }
-    FallBack Off
+    FallBack "Universal Render Pipeline/Lit"
 }

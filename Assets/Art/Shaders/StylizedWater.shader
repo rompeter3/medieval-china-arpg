@@ -84,5 +84,5 @@ Shader "MedievalChinaARPG/StylizedWater"
             ENDHLSL
         }
     }
-    FallBack Off
+    FallBack "Universal Render Pipeline/Unlit"
 }

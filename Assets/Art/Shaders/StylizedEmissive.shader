@@ -63,5 +63,5 @@ Shader "MedievalChinaARPG/StylizedEmissive"
             ENDHLSL
         }
     }
-    FallBack Off
+    FallBack "Universal Render Pipeline/Unlit"
 }

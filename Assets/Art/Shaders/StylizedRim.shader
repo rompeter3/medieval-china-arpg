@@ -16,19 +16,21 @@ Shader "MedievalChinaARPG/StylizedRim"
     }
     SubShader
     {
-        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" "Queue"="Geometry" }
+        Tags
+        {
+            "RenderType" = "Opaque"
+            "RenderPipeline" = "UniversalPipeline"
+            "Queue" = "Geometry"
+        }
         LOD 250
-
         Pass
         {
             Name "ForwardLit"
-            Tags { "LightMode"="UniversalForward" }
+            Tags { "LightMode" = "UniversalForward" }
 
             HLSLPROGRAM
             #pragma vertex vert
             #pragma fragment frag
-            #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
-            #pragma multi_compile_fragment _ _SHADOWS_SOFT
             #pragma multi_compile_fog
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
@@ -88,14 +90,14 @@ Shader "MedievalChinaARPG/StylizedRim"
             {
                 float3 n = normalize(input.normalWS);
                 float3 v = GetWorldSpaceNormalizeViewDir(input.positionWS);
-                Light mainLight = GetMainLight(TransformWorldToShadowCoord(input.positionWS));
+                // Avoid shadow-coord path — keeps this pass robust on Metal.
+                Light mainLight = GetMainLight();
 
                 float ndotl = saturate(dot(n, mainLight.direction));
                 float soft = smoothstep(0.0, _ShadowSoftness, ndotl);
                 float bands = max(1.0, _Bands);
                 float stepped = floor(soft * bands + 1e-4) / bands;
-                float shadow = mainLight.shadowAttenuation;
-                float lighting = lerp(0.0, 1.0, stepped * shadow);
+                float lighting = saturate(stepped);
 
                 float3 lit = lerp(_ShadeColor.rgb, _BaseColor.rgb, lighting) * mainLight.color;
                 float3 halfDir = normalize(mainLight.direction + v);
@@ -110,60 +112,6 @@ Shader "MedievalChinaARPG/StylizedRim"
             }
             ENDHLSL
         }
-
-        Pass
-        {
-            Name "ShadowCaster"
-            Tags { "LightMode"="ShadowCaster" }
-            ZWrite On
-            ZTest LEqual
-            ColorMask 0
-
-            HLSLPROGRAM
-            #pragma vertex ShadowVert
-            #pragma fragment ShadowFrag
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
-
-            float3 _LightDirection;
-
-            struct Attributes
-            {
-                float4 positionOS : POSITION;
-                float3 normalOS : NORMAL;
-            };
-
-            struct Varyings
-            {
-                float4 positionCS : SV_POSITION;
-            };
-
-            float4 GetShadowPositionHClip(Attributes input)
-            {
-                float3 positionWS = TransformObjectToWorld(input.positionOS.xyz);
-                float3 normalWS = TransformObjectToWorldNormal(input.normalOS);
-                float4 positionCS = TransformWorldToHClip(ApplyShadowBias(positionWS, normalWS, _LightDirection));
-                #if UNITY_REVERSED_Z
-                positionCS.z = min(positionCS.z, UNITY_NEAR_CLIP_VALUE);
-                #else
-                positionCS.z = max(positionCS.z, UNITY_NEAR_CLIP_VALUE);
-                #endif
-                return positionCS;
-            }
-
-            Varyings ShadowVert(Attributes input)
-            {
-                Varyings output;
-                output.positionCS = GetShadowPositionHClip(input);
-                return output;
-            }
-
-            half4 ShadowFrag(Varyings input) : SV_TARGET
-            {
-                return 0;
-            }
-            ENDHLSL
-        }
     }
-    FallBack Off
+    FallBack "Universal Render Pipeline/Lit"
 }

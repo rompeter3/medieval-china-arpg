@@ -228,7 +228,8 @@ namespace MedievalChinaARPG.World
             light.color = new Color(1f, 0.65f, 0.3f);
             light.range = 8f;
             light.intensity = 2.2f;
-            light.shadows = LightShadows.Soft;
+            // Soft point shadows from many lanterns flood the atlas and spam Console.
+            light.shadows = LightShadows.None;
         }
     }
 }
