@@ -1,5 +1,6 @@
 name: Build Players (Windows + macOS)
 
+# Re-run trigger: verifies Unity Actions secrets after user install.
 on:
   workflow_dispatch:
   push:
