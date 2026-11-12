@@ -1,0 +1,127 @@
+name: Build Players (Windows + macOS)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "Assets/**"
+      - "Packages/**"
+      - "ProjectSettings/**"
+      - ".github/workflows/build-players.yml"
+      - "Assets/Editor/**"
+  release:
+    types: [published]
+
+concurrency:
+  group: player-builds-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UNITY_VERSION: 6000.0.32f1
+
+jobs:
+  build:
+    name: ${{ matrix.targetPlatform }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        targetPlatform:
+          - StandaloneWindows64
+          - StandaloneOSX
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: false
+          fetch-depth: 1
+
+      - name: Cache Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-${{ matrix.targetPlatform }}-
+            Library-
+
+      - name: Build
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: ${{ matrix.targetPlatform }}
+          unityVersion: ${{ env.UNITY_VERSION }}
+          buildName: MedievalChinaARPG
+          buildsPath: build
+          allowDirtyBuild: true
+
+      - name: Zip player
+        shell: bash
+        run: |
+          set -euo pipefail
+          platform="${{ matrix.targetPlatform }}"
+          case "$platform" in
+            StandaloneWindows64) zip_name="MedievalChinaARPG-Windows-x64.zip" ;;
+            StandaloneOSX)       zip_name="MedievalChinaARPG-macOS.zip" ;;
+            *)                   zip_name="MedievalChinaARPG-${platform}.zip" ;;
+          esac
+          mkdir -p dist
+          (
+            cd build
+            zip -r "../dist/${zip_name}" "${platform}"
+          )
+          echo "ZIP_NAME=${zip_name}" >> "$GITHUB_ENV"
+          ls -lah dist/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.ZIP_NAME }}
+          path: dist/${{ env.ZIP_NAME }}
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'release' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    permissions:
+      contents: write
+    steps:
+      - name: Download build zips
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: List artifacts
+        run: find artifacts -type f -ls
+
+      - name: Create or update player-builds release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: player-builds
+          name: Player builds (Windows + macOS)
+          body: |
+            Downloadable standalone players for **Medieval China ARPG**.
+
+            | Platform | Asset |
+            |----------|-------|
+            | Windows x64 | `MedievalChinaARPG-Windows-x64.zip` |
+            | macOS | `MedievalChinaARPG-macOS.zip` |
+
+            Built from `${{ github.sha }}` on `${{ github.ref_name }}` via GameCI (`${{ env.UNITY_VERSION }}`).
+          files: |
+            artifacts/MedievalChinaARPG-Windows-x64.zip
+            artifacts/MedievalChinaARPG-macOS.zip
+          fail_on_unmatched_files: true
+          make_latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UNITY_VERSION: 6000.0.32f1

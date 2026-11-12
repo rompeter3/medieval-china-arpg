@@ -58,5 +58,13 @@ Docs/DESIGN.md
 python3 Tools/validate_slice.py
 ```
 
+## Downloadable players (Windows + macOS)
+CI builds via GameCI. After Unity license secrets are set and the workflow succeeds:
+
+- [Windows x64 zip](https://github.com/rompeter3/medieval-china-arpg/releases/download/player-builds/MedievalChinaARPG-Windows-x64.zip)
+- [macOS zip](https://github.com/rompeter3/medieval-china-arpg/releases/download/player-builds/MedievalChinaARPG-macOS.zip)
+
+Setup steps (license secrets): see [`Docs/PLAYER_BUILDS.md`](Docs/PLAYER_BUILDS.md).
+
 ## License
 Code in this repository is provided for the project owner (`rompeter3`). Add a formal license as desired.
