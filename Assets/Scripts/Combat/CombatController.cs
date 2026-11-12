@@ -119,6 +119,18 @@ namespace MedievalChinaARPG.Combat
             go.name = "Projectile";
             go.transform.position = origin;
             go.transform.localScale = Vector3.one * 0.25f;
+            var rend = go.GetComponent<Renderer>();
+            if (rend != null)
+            {
+                var shader = Shader.Find("MedievalChinaARPG/StylizedEmissive");
+                if (shader != null)
+                {
+                    var mat = new Material(shader);
+                    mat.SetColor("_BaseColor", new Color(0.9f, 0.85f, 0.55f));
+                    mat.SetColor("_Emission", new Color(1.4f, 1.1f, 0.4f));
+                    rend.sharedMaterial = mat;
+                }
+            }
             Object.Destroy(go.GetComponent<Collider>());
             var col = go.AddComponent<SphereCollider>();
             col.isTrigger = true;
