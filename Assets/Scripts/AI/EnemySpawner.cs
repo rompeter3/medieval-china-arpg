@@ -1,5 +1,6 @@
 using UnityEngine;
 using MedievalChinaARPG.Items;
+using MedievalChinaARPG.World;
 
 namespace MedievalChinaARPG.AI
 {
@@ -43,7 +44,7 @@ namespace MedievalChinaARPG.AI
             var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             go.name = name;
             go.transform.position = pos;
-            go.GetComponent<Renderer>().material.color = color;
+            VisualStyle.Apply(go.GetComponent<Renderer>(), VisualStyle.MakeLit(color, rim: 0.7f));
             var cc = go.AddComponent<CharacterController>();
             cc.height = height;
             cc.center = Vector3.up * (height * 0.15f);

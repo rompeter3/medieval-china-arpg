@@ -69,29 +69,32 @@ namespace MedievalChinaARPG.World
 
         void BuildCharacterCreate()
         {
-            EnsureLightAndGround(new Color(0.55f, 0.62f, 0.48f));
+            EnsureLightAndGround(new Color(0.55f, 0.62f, 0.48f), dusk: false);
+            PropBuilder.BuildHub(); // backdrop for nicer preview
             var preview = CreatePlayerBody(new Vector3(0f, 0f, 0f), false);
             var custom = preview.AddComponent<CharacterCustomization>();
             var ui = gameObject.AddComponent<UI.CharacterCreateUI>();
             ui.Bind(custom, database);
             EnsureCamera(preview.transform, new Vector3(0f, 1.6f, -4f));
+            VisualStyle.EnsureAtmosphere(new Color(0.55f, 0.62f, 0.48f), dusk: false);
         }
 
         void BuildHub()
         {
-            EnsureLightAndGround(new Color(0.45f, 0.52f, 0.38f));
+            EnsureLightAndGround(new Color(0.42f, 0.5f, 0.36f), dusk: false);
             PropBuilder.BuildHub();
             var player = CreatePlayerBody(new Vector3(0f, 0.1f, -6f), true);
             SetupPlayerSystems(player);
             EnsureCamera(player.transform, new Vector3(0f, 3f, -8f));
             CreatePortal(new Vector3(0f, 0.1f, 10f));
+            VisualStyle.EnsureAtmosphere(new Color(0.42f, 0.5f, 0.36f), dusk: false);
             gameObject.AddComponent<UI.HUD>();
             gameObject.AddComponent<UI.InventoryUI>();
         }
 
         void BuildCombat()
         {
-            EnsureLightAndGround(new Color(0.35f, 0.42f, 0.32f));
+            EnsureLightAndGround(new Color(0.32f, 0.3f, 0.28f), dusk: true);
             PropBuilder.BuildCombatArena();
             var player = CreatePlayerBody(new Vector3(0f, 0.1f, -8f), true);
             SetupPlayerSystems(player);
@@ -103,6 +106,7 @@ namespace MedievalChinaARPG.World
             spawner.ConfigureLoot(common, rare, drop);
             spawner.SpawnDefaultEncounter();
             CreateReturnPortal(new Vector3(0f, 0.1f, -14f));
+            VisualStyle.EnsureAtmosphere(new Color(0.32f, 0.3f, 0.28f), dusk: true);
             gameObject.AddComponent<UI.HUD>();
             gameObject.AddComponent<UI.InventoryUI>();
         }
@@ -113,7 +117,8 @@ namespace MedievalChinaARPG.World
             gate.name = "ReturnPortal";
             gate.transform.position = pos + Vector3.up;
             gate.transform.localScale = new Vector3(2.0f, 1.0f, 0.4f);
-            gate.GetComponent<Renderer>().material.color = new Color(0.55f, 0.4f, 0.25f);
+            VisualStyle.Apply(gate.GetComponent<Renderer>(),
+                VisualStyle.MakeEmissive(new Color(0.65f, 0.45f, 0.25f), new Color(1.1f, 0.7f, 0.3f)));
             var trigger = gate.AddComponent<BoxCollider>();
             trigger.isTrigger = true;
             trigger.size = new Vector3(1.2f, 2f, 2f);
@@ -165,7 +170,21 @@ namespace MedievalChinaARPG.World
             var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
             go.name = "Player";
             go.transform.position = pos;
-            go.GetComponent<Renderer>().material.color = new Color(0.75f, 0.55f, 0.4f);
+            var bodyRend = go.GetComponent<Renderer>();
+            VisualStyle.Apply(bodyRend, VisualStyle.MakeLit(new Color(0.78f, 0.58f, 0.42f),
+                new Color(0.35f, 0.22f, 0.2f), 1f));
+
+            // Simple robe shell
+            var robe = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            robe.name = "Robe";
+            robe.transform.SetParent(go.transform, false);
+            robe.transform.localPosition = new Vector3(0f, 0.35f, 0f);
+            robe.transform.localScale = new Vector3(0.85f, 0.9f, 0.55f);
+            var robeRend = robe.GetComponent<Renderer>();
+            VisualStyle.Apply(robeRend, VisualStyle.MakeLit(new Color(0.45f, 0.12f, 0.1f),
+                new Color(0.18f, 0.08f, 0.1f), 0.9f));
+            Object.Destroy(robe.GetComponent<Collider>());
+
             if (withController)
             {
                 Object.Destroy(go.GetComponent<CapsuleCollider>());
@@ -179,8 +198,20 @@ namespace MedievalChinaARPG.World
             hair.transform.SetParent(go.transform);
             hair.transform.localPosition = new Vector3(0f, 0.95f, 0f);
             hair.transform.localScale = new Vector3(0.55f, 0.35f, 0.55f);
-            hair.GetComponent<Renderer>().material.color = new Color(0.1f, 0.08f, 0.07f);
+            var hairRend = hair.GetComponent<Renderer>();
+            VisualStyle.Apply(hairRend, VisualStyle.MakeLit(new Color(0.1f, 0.08f, 0.07f),
+                new Color(0.04f, 0.03f, 0.03f), 0.5f));
             Object.Destroy(hair.GetComponent<Collider>());
+
+            // Topknot
+            var knot = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            knot.name = "Topknot";
+            knot.transform.SetParent(hair.transform, false);
+            knot.transform.localPosition = new Vector3(0f, 0.55f, 0f);
+            knot.transform.localScale = new Vector3(0.45f, 0.55f, 0.45f);
+            VisualStyle.Apply(knot.GetComponent<Renderer>(),
+                VisualStyle.MakeLit(new Color(0.08f, 0.06f, 0.05f)));
+            Object.Destroy(knot.GetComponent<Collider>());
             return go;
         }
 
@@ -190,7 +221,8 @@ namespace MedievalChinaARPG.World
             gate.name = "Portal";
             gate.transform.position = pos + Vector3.up;
             gate.transform.localScale = new Vector3(2.2f, 1.2f, 0.4f);
-            gate.GetComponent<Renderer>().material.color = new Color(0.35f, 0.55f, 0.75f);
+            VisualStyle.Apply(gate.GetComponent<Renderer>(),
+                VisualStyle.MakeEmissive(new Color(0.3f, 0.55f, 0.8f), new Color(0.4f, 0.85f, 1.4f)));
             var trigger = gate.AddComponent<BoxCollider>();
             trigger.isTrigger = true;
             trigger.size = new Vector3(1.2f, 2f, 2f);
@@ -214,25 +246,24 @@ namespace MedievalChinaARPG.World
             Cursor.visible = false;
         }
 
-        void EnsureLightAndGround(Color groundColor)
+        void EnsureLightAndGround(Color groundColor, bool dusk)
         {
-            if (Object.FindFirstObjectByType<Light>() == null)
+            var existing = Object.FindFirstObjectByType<Light>();
+            if (existing == null)
             {
                 var lightGo = new GameObject("Directional Light");
-                var light = lightGo.AddComponent<Light>();
-                light.type = LightType.Directional;
-                light.color = new Color(1f, 0.95f, 0.85f);
-                light.intensity = 1.1f;
-                light.shadows = LightShadows.Soft;
-                lightGo.transform.rotation = Quaternion.Euler(40f, -30f, 0f);
+                existing = lightGo.AddComponent<Light>();
+                existing.type = LightType.Directional;
             }
+            VisualStyle.StyleDirectionalLight(existing, dusk);
 
             if (GameObject.Find("Ground") == null)
             {
                 var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
                 ground.name = "Ground";
-                ground.transform.localScale = new Vector3(6f, 1f, 6f);
-                ground.GetComponent<Renderer>().material.color = groundColor;
+                ground.transform.localScale = new Vector3(7f, 1f, 7f);
+                VisualStyle.Apply(ground.GetComponent<Renderer>(),
+                    VisualStyle.MakeLit(groundColor, Color.Lerp(groundColor, new Color(0.15f, 0.12f, 0.1f), 0.45f), 0.35f));
             }
         }
     }

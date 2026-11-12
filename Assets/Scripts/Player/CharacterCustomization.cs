@@ -25,9 +25,26 @@ namespace MedievalChinaARPG.Player
 
         void Awake()
         {
+            AutoBindRenderers();
             if (presets == null || presets.Length == 0)
                 presets = BuildDefaultPresets();
             ApplyPreset(0);
+        }
+
+        void AutoBindRenderers()
+        {
+            if (bodyRenderer == null)
+            {
+                var robe = transform.Find("Robe");
+                bodyRenderer = robe != null
+                    ? robe.GetComponent<Renderer>()
+                    : GetComponent<Renderer>();
+            }
+            if (hairRenderer == null)
+            {
+                var hair = transform.Find("Hair");
+                if (hair != null) hairRenderer = hair.GetComponent<Renderer>();
+            }
         }
 
         public AppearancePreset[] Presets => presets;
@@ -51,34 +68,44 @@ namespace MedievalChinaARPG.Player
         public void ApplyColors(AppearancePreset preset)
         {
             if (preset == null) return;
+            AutoBindRenderers();
+
+            var skin = GetComponent<Renderer>();
+            if (skin != null)
+                SetColor(skin.material, preset.skinColor);
+
             if (bodyRenderer != null)
+                SetColor(bodyRenderer.material, preset.outfitPrimary);
+
+            if (hairRenderer != null)
             {
-                var mats = bodyRenderer.materials;
-                if (mats.Length > 0)
+                SetColor(hairRenderer.material, preset.hairColor);
+                var knot = hairRenderer.transform.Find("Topknot");
+                if (knot != null)
                 {
-                    mats[0].color = preset.skinColor;
-                    if (mats.Length > 1) mats[1].color = preset.outfitPrimary;
-                    if (mats.Length > 2) mats[2].color = preset.outfitSecondary;
-                    bodyRenderer.materials = mats;
-                }
-                else
-                {
-                    bodyRenderer.material.color = preset.outfitPrimary;
+                    var kr = knot.GetComponent<Renderer>();
+                    if (kr != null) SetColor(kr.material, Color.Lerp(preset.hairColor, Color.black, 0.25f));
                 }
             }
-            if (hairRenderer != null)
-                hairRenderer.material.color = preset.hairColor;
         }
 
         public void ApplyArmorTint(Color tint)
         {
+            AutoBindRenderers();
             if (bodyRenderer == null) return;
-            var mats = bodyRenderer.materials;
-            if (mats.Length > 1)
-            {
-                mats[1].color = Color.Lerp(mats[1].color, tint, 0.65f);
-                bodyRenderer.materials = mats;
-            }
+            var mat = bodyRenderer.material;
+            var current = mat.HasProperty("_BaseColor") ? mat.GetColor("_BaseColor") : mat.color;
+            SetColor(mat, Color.Lerp(current, tint, 0.65f));
+        }
+
+        static void SetColor(Material mat, Color color)
+        {
+            if (mat == null) return;
+            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", color);
+            if (mat.HasProperty("_ShadeColor"))
+                mat.SetColor("_ShadeColor", Color.Lerp(color, new Color(0.12f, 0.1f, 0.14f), 0.5f));
+            if (mat.HasProperty("_Color")) mat.SetColor("_Color", color);
+            mat.color = color;
         }
 
         static AppearancePreset[] BuildDefaultPresets()
